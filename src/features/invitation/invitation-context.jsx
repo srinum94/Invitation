@@ -6,7 +6,7 @@ const InvitationContext = createContext(null);
 
 export function InvitationProvider({ children }) {
 
-  // ✅ Simple fixed UID (not using URL anymore)
+  // ✅ Static UID (no URL dependency)
   const invitationUid = "demo";
 
   const {
@@ -16,8 +16,7 @@ export function InvitationProvider({ children }) {
   } = useQuery({
     queryKey: ["invitation", invitationUid],
     queryFn: async () => {
-      const response = await fetchInvitation(invitationUid);
-      return response; // ✅ IMPORTANT FIX
+      return await fetchInvitation(invitationUid); // ✅ NO success check
     },
     staleTime: 10 * 60 * 1000,
   });
@@ -28,7 +27,7 @@ export function InvitationProvider({ children }) {
         uid: invitationUid,
         config,
         isLoading,
-        error: error?.message,
+        error: error?.message || null,
       }}
     >
       {children}
@@ -36,3 +35,15 @@ export function InvitationProvider({ children }) {
   );
 }
 
+/**
+ * ✅ REQUIRED EXPORT (this fixes your error)
+ */
+export function useInvitation() {
+  const context = useContext(InvitationContext);
+
+  if (!context) {
+    throw new Error("useInvitation must be used within InvitationProvider");
+  }
+
+  return context;
+}
